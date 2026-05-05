@@ -11,12 +11,11 @@ function cn(...inputs: ClassValue[]) {
 interface ReceiptListProps {
   receipts: ReceiptData[];
   onDelete: (id: string) => void;
-  onEdit: (receipt: ReceiptData) => void;
   onView: (receipt: ReceiptData) => void;
   activeId?: string;
 }
 
-const ReceiptList: React.FC<ReceiptListProps> = ({ receipts, onDelete, onEdit, onView, activeId }) => {
+const ReceiptList: React.FC<ReceiptListProps> = ({ receipts, onDelete, onView, activeId }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid': return <CheckCircle2 size={14} className="text-green-500" />;

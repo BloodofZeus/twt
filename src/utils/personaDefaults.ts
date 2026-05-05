@@ -7,7 +7,17 @@ export const DEFAULT_CUSTOMER_PERSONA = {
   email: 'emily.davidson@email-provider.com'
 };
 
-export const INDUSTRY_DEFAULTS: Record<ReceiptTheme, any> = {
+interface IndustryDefault {
+  companyName: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  notes: string;
+  footerText: string;
+}
+
+export const INDUSTRY_DEFAULTS: Record<ReceiptTheme, IndustryDefault> = {
   hospital: {
     companyName: 'Springfield Memorial Hospital',
     address: '701 N 1st St, Springfield, IL 62781, USA',

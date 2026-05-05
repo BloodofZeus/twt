@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReceiptForm from './components/ReceiptForm';
 import ReceiptPreview from './components/ReceiptPreview';
 import ReceiptList from './components/ReceiptList';
-import type { ReceiptData, ReceiptTheme, AppSettings, DocumentType } from './model';
+import type { ReceiptData, AppSettings, DocumentType } from './model';
 // import { THEMES } from './model'; // removed unused import
 import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
 import { 
@@ -17,30 +17,24 @@ import { generateProgrammaticPDF } from './utils/pdfGenerator';
 import { INDUSTRY_DEFAULTS, DEFAULT_CUSTOMER_PERSONA } from './utils/personaDefaults';
 
 const App: React.FC = () => {
-  const [receipts, setReceipts] = useState<ReceiptData[]>([]);
-  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
-  const [settings, setSettings] = useState<AppSettings>(getAppSettings());
-  const [isEditing, setIsEditing] = useState(false);
-  const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
-  const receiptRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setReceipts(getAllReceipts());
-    setSettings(getAppSettings());
-
-    // Check for draft on load
+  const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(() => {
     const draft = localStorage.getItem('twt_invoice_draft');
     if (draft) {
       try {
-        const draftData = JSON.parse(draft);
-        setActiveReceipt(draftData);
-        setIsEditing(true);
-        setView('editor');
-      } catch (e) {
-        console.error('Failed to parse draft', e);
+        return JSON.parse(draft);
+      } catch (err) {
+        console.error('Failed to parse draft', err);
       }
     }
-  }, []);
+    return null;
+  });
+  const [settings] = useState<AppSettings>(() => getAppSettings());
+  const [isEditing, setIsEditing] = useState(() => !!localStorage.getItem('twt_invoice_draft'));
+  const [view, setView] = useState<'dashboard' | 'editor'>(() => 
+    localStorage.getItem('twt_invoice_draft') ? 'editor' : 'dashboard'
+  );
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   // Autosave draft
   useEffect(() => {
@@ -275,8 +269,8 @@ const App: React.FC = () => {
         const response = await fetch(imgData);
         const blob = await response.blob();
         await saveToServer(filename, blob, `invoices/${activeReceipt.id.slice(0, 8).toUpperCase()}`);
-      } catch (e) {
-        console.warn('Silent server backup failed, but browser download should be complete.');
+      } catch (err) {
+        console.warn('Silent server backup failed, but browser download should be complete.', err);
       }
     }
   });
@@ -346,14 +340,11 @@ const App: React.FC = () => {
       link.href = imgData;
       link.click();
       alert('Image Generated and Saved to Server!');
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Image Generation Error:', error);
-      alert(`Failed to generate image: ${error.message || 'Unknown error'}. Fix: Try using the "Upload Image" button to upload your logo from your computer instead.`);
+      alert(`Failed to generate image: ${message}. Fix: Try using the "Upload Image" button to upload your logo from your computer instead.`);
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   // Stats calculation
@@ -483,12 +474,11 @@ const App: React.FC = () => {
                   </div>
                   <div className="p-2 md:p-4 overflow-x-auto">
                     <ReceiptList 
-                      receipts={receipts}
-                      onDelete={handleDelete}
-                      onEdit={handleEdit}
-                      onView={handleView}
-                      activeId={activeReceipt?.id}
-                    />
+                  receipts={receipts} 
+                  onDelete={handleDelete} 
+                  onView={handleView}
+                  activeId={activeReceipt?.id}
+                />
                   </div>
                 </div>
               </div>

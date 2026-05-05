@@ -2,7 +2,8 @@ import React from 'react';
 import type { ReceiptData } from '../../model';
 import { 
   Mail, Phone, MapPin, HeartPulse, Pill, Zap, 
-  Droplets, ShoppingBag, Globe, Fingerprint, CheckCircle2, Clock, XCircle
+  Droplets, ShoppingBag, Globe, Fingerprint, CheckCircle2, Clock, XCircle,
+  type LucideProps
 } from 'lucide-react';
 import { getIndustryTerminology } from '../../utils/terminology';
 import { clsx, type ClassValue } from 'clsx';
@@ -49,7 +50,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
           border: "border-r-[16px] border-emerald-500"
         };
       case 'electricity':
-      case 'water':
+      case 'water': {
         const color = data.theme === 'electricity' ? '#f59e0b' : '#3b82f6';
         const bgColor = data.theme === 'electricity' ? '#FEF3C7' : '#DBEAFE';
         const accentColor = data.theme === 'electricity' ? '#b45309' : '#1d4ed8';
@@ -64,6 +65,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
           tableStyle: "px-8 md:px-12",
           border: `border-t-[16px] border-[${color}]`
         };
+      }
       case 'retail':
       default:
         return {
@@ -99,7 +101,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
       {data.showIndustryBackground && (
         <div className="absolute inset-x-0 bottom-0 top-48 pointer-events-none flex items-center justify-center opacity-[0.04] z-0 select-none">
           <div className="transform scale-[12]">
-            {React.cloneElement(style.icon as React.ReactElement<any>, { strokeWidth: 0.5, className: 'text-slate-900' })}
+            {React.cloneElement(style.icon as React.ReactElement<LucideProps>, { strokeWidth: 0.5, className: 'text-slate-900' })}
           </div>
         </div>
       )}
@@ -160,9 +162,9 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
 
       {/* Industry Specific Layouts */}
       <div className="px-8 md:px-12 pt-8 relative z-10">
-        {data.theme === 'hospital' && <MedicalLayout data={data.medicalData} />}
-        {data.theme === 'pharmacy' && <MedicalLayout data={data.medicalData} />}
-        {(data.theme === 'electricity' || data.theme === 'water') && (
+        {data.theme === 'hospital' && data.medicalData && <MedicalLayout data={data.medicalData} />}
+        {data.theme === 'pharmacy' && data.medicalData && <MedicalLayout data={data.medicalData} />}
+        {(data.theme === 'electricity' || data.theme === 'water') && data.utilityData && (
           <UtilityLayout data={data.utilityData} colorClass={style.accentText} />
         )}
       </div>
@@ -258,7 +260,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
             <span>Grand Total</span>
             <span>{data.currency}{formatNumber(Math.max(0, data.total))}</span>
           </div>
-            {data.paidAmount > 0 && (
+            {data.paidAmount !== undefined && data.paidAmount > 0 && (
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">
                 <span>Paid ({formatDate(data.paidDate)})</span>
                 <span className="text-emerald-600">{data.currency}{formatNumber(Math.abs(data.paidAmount))}</span>

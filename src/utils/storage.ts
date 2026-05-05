@@ -1,5 +1,4 @@
 import type { ReceiptData, AppSettings } from '../model';
-import { DEFAULT_CUSTOMER_PERSONA } from './personaDefaults';
 
 const STORAGE_KEY = 'twt_receipt_data';
 const SETTINGS_KEY = 'twt_app_settings';

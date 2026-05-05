@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { 
   Plus, Trash2, Save, Building2, User as UserIcon, CreditCard, 
-  Receipt as ReceiptIcon, Activity, Gauge, Info, HelpCircle, Pill 
+  Receipt as ReceiptIcon, Activity, Gauge 
 } from 'lucide-react';
-import type { ReceiptData, ReceiptItem, ReceiptTheme } from '../model';
+import type { ReceiptData, ReceiptItem } from '../model';
 import { THEMES } from '../model';
 import { getIndustryTerminology, INDUSTRY_SNIPPETS } from '../utils/terminology';
 import { clsx, type ClassValue } from 'clsx';
@@ -31,7 +31,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUpl
     if (total !== data.total || subtotal !== data.subtotal || taxAmount !== data.taxAmount) {
       onChange({ ...data, subtotal, taxAmount, total });
     }
-  }, [data.items, data.taxRate, data.discount, data.total, data.subtotal, data.taxAmount, onChange]);
+  }, [data, onChange]);
 
   const handleAddItem = () => {
     const newItem: ReceiptItem = { 

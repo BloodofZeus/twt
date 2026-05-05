@@ -1,8 +1,9 @@
 import React, { forwardRef } from 'react';
 import type { ReceiptData } from '../model';
 import { 
-  Phone, MapPin, Calendar, Clock, HeartPulse, Zap, 
-  Droplets, Globe, Mail, Fingerprint, Pill, ShoppingBag
+  HeartPulse, Zap, 
+  Droplets, Pill, ShoppingBag,
+  type LucideProps
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -62,7 +63,7 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
             icon: <Pill className="text-emerald-600" size={48} strokeWidth={1.5} />
           };
         case 'electricity':
-        case 'water':
+        case 'water': {
           const color = data.theme === 'electricity' ? 'amber' : 'blue';
           const Icon = data.theme === 'electricity' ? Zap : Droplets;
           return {
@@ -74,6 +75,7 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
             title: "UTILITY PAYMENT ADVICE",
             icon: <Icon className={`text-${color}-600`} size={48} strokeWidth={1.5} />
           };
+        }
         case 'retail':
         default:
           return {
@@ -96,8 +98,8 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
         {data.showIndustryBackground && (
           <div className="absolute inset-x-0 bottom-0 top-32 pointer-events-none flex items-center justify-center opacity-[0.04] z-0 select-none">
             <div className="transform scale-[8]">
-              {React.cloneElement(style.icon as React.ReactElement<any>, { strokeWidth: 0.5, className: 'text-slate-900' })}
-            </div>
+            {React.cloneElement(style.icon as React.ReactElement<LucideProps>, { strokeWidth: 0.5, className: 'text-slate-900' })}
+          </div>
           </div>
         )}
 
@@ -121,8 +123,8 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
                   className="w-14 h-14 object-contain" 
                 />
               ) : (
-                <div className="w-16 h-16 flex items-center justify-center bg-transparent">
-                  {React.cloneElement(style.icon as React.ReactElement<any>, { size: 48, strokeWidth: 1.25 })}
+                <div className="bg-transparent w-24 h-24 flex items-center justify-center overflow-hidden shrink-0">
+                  {React.cloneElement(style.icon as React.ReactElement<LucideProps>, { size: 64, strokeWidth: 1 })}
                 </div>
               )}
             </div>

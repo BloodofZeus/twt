@@ -103,7 +103,7 @@ export const generateProgrammaticPDF = async (data: ReceiptData): Promise<Blob> 
     }
   });
 
-  currentY = (doc as any).lastAutoTable.finalY + 10;
+  currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
   // 5. Totals
   const summaryX = pageWidth - margin - 60;

@@ -120,7 +120,7 @@
   }
 
   /* Hide UI elements */
-  nav, .no-print, button, form, .lg\\:col-span-7 { 
+  nav, .no-print, button, form, [class*="lg:col-span-7"] { 
     display: none !important; 
   }
 }
