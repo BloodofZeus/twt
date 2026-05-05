@@ -1,0 +1,15 @@
+{
+    "id": "PERSONA_ELECTRICITY_002745",
+    "theme": "electricity",
+    "documentType": "invoice",
+    "company": {
+        "name": "Davidson Power & Light",
+        "owner": "Emily R. Davidson",
+        "address": "Emily R. Davidson, Houston, TX, USA",
+        "phone": "+1 (USA) PERSONA-MOCK",
+        "email": "emily@davidson-fiction.com"
+    },
+    "status": "pending",
+    "timestamp": "2026-05-03 00:27:45",
+    "persona_verified": true
+}

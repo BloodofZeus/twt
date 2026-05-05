@@ -1,0 +1,15 @@
+{
+    "id": "CUST_PERSONA_RETAIL_003255",
+    "theme": "retail",
+    "documentType": "invoice",
+    "company": {
+        "name": "Lincoln Square Boutique",
+        "address": "Downtown Springfield, IL 62701, USA",
+        "city": "Springfield, IL"
+    },
+    "customerName": "Emily R. Davidson",
+    "customerAddress": "742 Evergreen Terrace, Springfield, IL 62704, USA",
+    "status": "pending",
+    "timestamp": "2026-05-03 00:32:55",
+    "persona_type": "customer_female_usa"
+}

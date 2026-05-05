@@ -1,0 +1,15 @@
+{
+    "id": "PERSONA_RETAIL_002745",
+    "theme": "retail",
+    "documentType": "invoice",
+    "company": {
+        "name": "Davidson's Boutique & Co.",
+        "owner": "Emily R. Davidson",
+        "address": "Emily R. Davidson, New York, NY, USA",
+        "phone": "+1 (USA) PERSONA-MOCK",
+        "email": "emily@davidson-fiction.com"
+    },
+    "status": "pending",
+    "timestamp": "2026-05-03 00:27:45",
+    "persona_verified": true
+}

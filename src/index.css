@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+@theme {
+  --color-hospital-primary: #0ea5e9;
+  --color-hospital-secondary: #f0f9ff;
+  --color-hospital-text: #0c4a6e;
+  
+  --color-food-primary: #f97316;
+  --color-food-secondary: #fff7ed;
+  --color-food-text: #7c2d12;
+  
+  --color-electricity-primary: #eab308;
+  --color-electricity-secondary: #fefce8;
+  --color-electricity-text: #713f12;
+  
+  --color-water-primary: #3b82f6;
+  --color-water-secondary: #eff6ff;
+  --color-water-text: #1e3a8a;
+
+  --font-receipt: "Courier Prime", "Courier New", monospace;
+  --font-modern: "Inter", "Plus Jakarta Sans", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a; /* slate-900 hex */
+    @apply min-h-screen selection:bg-blue-100 selection:text-blue-900;
+  }
+}
+
+@layer components {
+  .receipt-container {
+    background-color: #ffffff;
+    color: #1e293b; /* slate-800 hex */
+    @apply mx-auto overflow-hidden transition-all duration-300;
+  }
+
+  /* Force standard colors for capture area to avoid oklch errors */
+  .receipt-container * {
+    border-color: #e2e8f0; /* slate-200 hex */
+  }
+
+  .receipt-container .text-slate-900 { color: #0f172a !important; }
+  .receipt-container .text-slate-800 { color: #1e293b !important; }
+  .receipt-container .text-slate-700 { color: #334155 !important; }
+  .receipt-container .text-slate-600 { color: #475569 !important; }
+  .receipt-container .text-slate-500 { color: #64748b !important; }
+  .receipt-container .text-slate-400 { color: #94a3b8 !important; }
+  
+  .receipt-container .bg-slate-50 { background-color: #f8fafc !important; }
+  .receipt-container .bg-slate-100 { background-color: #f1f5f9 !important; }
+  
+  .receipt-container .border-slate-100 { border-color: #f1f5f9 !important; }
+   .receipt-container .border-slate-200 { border-color: #e2e8f0 !important; }
+
+   /* Sky theme fallbacks */
+   .receipt-container .bg-sky-50\/50 { background-color: rgba(240, 249, 255, 0.5) !important; }
+   .receipt-container .border-sky-100 { border-color: #e0f2fe !important; }
+   .receipt-container .text-sky-600 { color: #0284c7 !important; }
+
+   /* Emerald theme fallbacks */
+   .receipt-container .bg-emerald-50\/50 { background-color: rgba(236, 253, 245, 0.5) !important; }
+   .receipt-container .border-emerald-100 { border-color: #d1fae5 !important; }
+   .receipt-container .text-emerald-600 { color: #059669 !important; }
+
+   /* Amber theme fallbacks */
+   .receipt-container .bg-amber-50\/50 { background-color: rgba(255, 251, 235, 0.5) !important; }
+   .receipt-container .border-amber-100 { border-color: #fef3c7 !important; }
+   .receipt-container .text-amber-600 { color: #d97706 !important; }
+
+   .btn-primary {
+     @apply px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 active:scale-95 font-bold flex items-center gap-2;
+   }
+ 
+   .btn-secondary {
+     @apply px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95 font-bold flex items-center gap-2;
+   }
+ 
+   .input-field {
+     @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-300;
+   }
+ 
+   .glass-card {
+     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+   }
+ }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+  
+  body {
+    background: white !important;
+  }
+
+  /* Reset all visibility for print */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the receipt container */
+  .receipt-container, .receipt-container * {
+    visibility: visible !important;
+  }
+  
+  .receipt-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  /* Hide UI elements */
+  nav, .no-print, button, form, .lg\\:col-span-7 { 
+    display: none !important; 
+  }
+}
