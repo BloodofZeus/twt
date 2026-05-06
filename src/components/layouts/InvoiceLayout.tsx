@@ -75,8 +75,8 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
             <td className="py-5">
               <p className="font-black text-slate-900 uppercase text-xs">{item.description || 'General Service'}</p>
               {item.code && (
-                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">
-                  {term.itemCodeLabel}: {item.code}
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                  {term.itemCodeLabel}: <span className="text-slate-900">{item.code}</span>
                 </p>
               )}
             </td>
@@ -135,7 +135,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
               <HeartPulse size={48} strokeWidth={1.5} className="text-white" />
             </div>
           )}
-          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Medical Invoice</h1>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">{term.invoiceTitle || 'Medical Invoice'}</h1>
           <div className="text-[11px] text-slate-400 font-bold uppercase space-y-0.5">
             <p className="text-sky-600 font-black">{data.company?.name}</p>
             <p>{data.company?.address}</p>
@@ -225,7 +225,8 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
             <p className="text-[11px] text-slate-400 font-bold uppercase max-w-xs">{data.company?.address}</p>
             <div className="pt-2 text-[10px] text-emerald-600 font-black uppercase space-y-0.5">
               <p>TEL: {data.company?.phone}</p>
-              <p>{data.company?.email} • {data.company?.website}</p>
+              <p>{data.company?.email}</p>
+              <p>{data.company?.website}</p>
             </div>
           </div>
           <div className="bg-slate-50 p-6 rounded-2xl border-l-4 border-emerald-500 space-y-2">
@@ -332,8 +333,9 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
             <div className="space-y-1">
               <p className="text-lg font-black text-slate-900 uppercase">{data.company?.name}</p>
               <p className="text-xs text-slate-500 uppercase">{data.company?.address}</p>
-              <p className="text-[10px] text-amber-600 font-black uppercase">TEL: {data.company?.phone}</p>
+              <p className="text-[10px] text-amber-600 font-black uppercase pt-1">TEL: {data.company?.phone}</p>
               <p className="text-[10px] text-amber-600 font-black uppercase">{data.company?.email}</p>
+              <p className="text-[10px] text-amber-600 font-black uppercase">{data.company?.website}</p>
             </div>
           </div>
         </section>
@@ -392,18 +394,19 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
       </header>
 
       <section className="grid grid-cols-2 gap-20 mb-20">
-        <div className="border-l-4 border-blue-500 pl-8 py-2 space-y-4">
+        <div className="border-l-4 border-blue-500 pl-8 py-2 space-y-6">
           <div>
-            <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-3">Service Provider</p>
-            <p className="text-xl font-black text-blue-900 uppercase italic">{data.company?.name}</p>
+            <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Service Provider</p>
+            <p className="text-xl font-black text-blue-900 uppercase italic leading-tight">{data.company?.name}</p>
             <p className="text-[10px] text-slate-500 uppercase leading-relaxed mt-1">{data.company?.address}</p>
-            <div className="pt-2 text-[10px] text-blue-500 font-black uppercase">
+            <div className="pt-2 text-[10px] text-blue-500 font-black uppercase space-y-0.5">
               <p>TEL: {data.company?.phone}</p>
               <p>{data.company?.email}</p>
+              <p>{data.company?.website}</p>
             </div>
           </div>
-          <div className="pt-4 border-t border-blue-50">
-            <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-3">Bill To</p>
+          <div className="pt-6 border-t border-blue-50">
+            <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Bill To</p>
             <p className="text-xl font-black text-slate-900 uppercase">{data.customerName}</p>
             <p className="text-sm text-slate-500 mt-2 leading-relaxed uppercase">{data.customerAddress}</p>
           </div>
@@ -471,7 +474,7 @@ export const InvoiceLayout: React.FC<InvoiceLayoutProps> = ({ data }) => {
         <div className="space-y-1">
           <h1 className="text-4xl font-black tracking-tighter uppercase">{data.company?.name}</h1>
           <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.4em]">{data.documentType} archive</p>
-          <div className="pt-4 text-[10px] text-slate-400 font-bold uppercase space-y-1">
+          <div className="pt-6 text-[10px] text-slate-400 font-bold uppercase space-y-1">
             <p>{data.company?.address}</p>
             <p>TEL: {data.company?.phone} • {data.company?.email}</p>
             <p>{data.company?.website}</p>
