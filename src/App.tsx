@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReceiptForm from './components/ReceiptForm';
 import ReceiptPreview from './components/ReceiptPreview';
 import ReceiptList from './components/ReceiptList';
-import type { ReceiptData, AppSettings, DocumentType } from './model';
-import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
+import type { ReceiptData, AppSettings, DocumentType, CompanyDetails } from './model';
+import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings, saveAppSettings } from './utils/storage';
 import { 
   Printer, Plus, Receipt as ReceiptIcon, 
   Image as ImageIcon, Share2
@@ -22,7 +22,7 @@ function cn(...inputs: ClassValue[]) {
 const App: React.FC = () => {
   const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
   const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
-  const [settings] = useState<AppSettings>(() => getAppSettings());
+  const [settings, setSettings] = useState<AppSettings>(() => getAppSettings());
   const [, setIsEditing] = useState(false);
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
   const [isMobile, setIsMobile] = useState(false);
@@ -69,28 +69,30 @@ const App: React.FC = () => {
   const createNew = (type: DocumentType) => {
     const data = emptyReceipt(type);
     
-    // Apply industry defaults if any
+    // Apply industry defaults ONLY if the user hasn't set their own company name
     const theme = data.theme;
-    if (theme && INDUSTRY_DEFAULTS[theme]) {
+    const hasCustomProfile = settings.companyProfile.name && settings.companyProfile.name.trim() !== '';
+
+    if (!hasCustomProfile && theme && INDUSTRY_DEFAULTS[theme]) {
       const defaults = INDUSTRY_DEFAULTS[theme];
       data.company = {
         ...data.company,
-        name: defaults.companyName || data.company.name,
-        address: defaults.address || data.company.address,
-        phone: defaults.phone || data.company.phone,
-        email: defaults.email || data.company.email,
-        website: defaults.website || data.company.website
+        name: defaults.companyName,
+        address: defaults.address,
+        phone: defaults.phone,
+        email: defaults.email,
+        website: defaults.website
       };
-      data.notes = defaults.notes || data.notes;
-      data.footerText = defaults.footerText || data.footerText;
+      data.notes = defaults.notes;
+      data.footerText = defaults.footerText;
+    }
 
-      // Set Default Customer Persona
-      if (DEFAULT_CUSTOMER_PERSONA) {
-        data.customerName = DEFAULT_CUSTOMER_PERSONA.name;
-        data.customerAddress = DEFAULT_CUSTOMER_PERSONA.address;
-        data.customerPhone = DEFAULT_CUSTOMER_PERSONA.phone;
-        data.customerEmail = DEFAULT_CUSTOMER_PERSONA.email;
-      }
+    // Set Default Customer Persona if empty
+    if (!data.customerName && DEFAULT_CUSTOMER_PERSONA) {
+      data.customerName = DEFAULT_CUSTOMER_PERSONA.name;
+      data.customerAddress = DEFAULT_CUSTOMER_PERSONA.address;
+      data.customerPhone = DEFAULT_CUSTOMER_PERSONA.phone;
+      data.customerEmail = DEFAULT_CUSTOMER_PERSONA.email;
     }
 
     setActiveReceipt(data);
@@ -121,6 +123,22 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveSettings = (profile: CompanyDetails) => {
+    const newSettings = { ...settings, companyProfile: profile };
+    saveAppSettings(newSettings);
+    setSettings(newSettings);
+
+    // Also update active receipt if it exists so changes reflect in preview
+    if (activeReceipt) {
+      setActiveReceipt({
+        ...activeReceipt,
+        company: profile
+      });
+    }
+
+    alert('Business profile saved as default for future documents!');
+  };
+
   const handleDataChange = (data: ReceiptData) => {
     setActiveReceipt(data);
   };
@@ -145,6 +163,17 @@ const App: React.FC = () => {
   const handleDownloadPDF = useReactToPrint({
     contentRef: receiptRef,
     documentTitle: activeReceipt ? `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}` : 'document',
+    pageStyle: `
+      @page {
+        margin: 0 !important;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+          margin: 0 !important;
+        }
+      }
+    `,
     onBeforePrint: async () => {
       if (isMobile) {
         alert('On mobile: Please select "Save as PDF" from the print options to download the document.');
@@ -356,6 +385,7 @@ const App: React.FC = () => {
                     data={activeReceipt}
                     onSave={handleSave}
                     onChange={handleDataChange}
+                    onSaveSettings={handleSaveSettings}
                   />
                 </div>
               </div>

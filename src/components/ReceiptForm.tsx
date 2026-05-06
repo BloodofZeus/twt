@@ -4,7 +4,7 @@ import {
   ImageIcon,
   ChevronRight, FileText, Settings
 } from 'lucide-react';
-import type { ReceiptData, ReceiptItem } from '../model';
+import type { ReceiptData, ReceiptItem, CompanyDetails } from '../model';
 import { THEMES, CURRENCIES } from '../model';
 import { getIndustryTerminology } from '../utils/terminology';
 import { INDUSTRY_DEFAULTS } from '../utils/personaDefaults';
@@ -17,12 +17,13 @@ function cn(...inputs: ClassValue[]) {
 
 interface ReceiptFormProps {
   data: ReceiptData;
-  onSave: () => void;
   onChange: (data: ReceiptData) => void;
-  onUploadLogo?: (filename: string, blob: Blob) => void;
+  onSave?: () => void;
+  onSaveSettings?: (profile: CompanyDetails) => void;
+  onUploadLogo?: (name: string, file: File) => void;
 }
 
-const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUploadLogo }) => {
+const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange, onSave, onSaveSettings, onUploadLogo }) => {
   const term = getIndustryTerminology(data.theme);
   const [activeTab, setActiveTab] = React.useState<'config' | 'details' | 'items' | 'summary'>('config');
   
@@ -307,6 +308,16 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUpl
                   <input type="text" name="company.phone" value={data.company.phone} onChange={handleChange} className="input-field" placeholder="Phone" />
                   <input type="email" name="company.email" value={data.company.email} onChange={handleChange} className="input-field" placeholder="Email" />
                 </div>
+                <input type="text" name="company.website" value={data.company.website || ''} onChange={handleChange} className="input-field" placeholder="Business Website (e.g. www.yourstore.com)" />
+                
+                {onSaveSettings && (
+                  <button 
+                    onClick={() => onSaveSettings(data.company)}
+                    className="w-full py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all active:scale-[0.98]"
+                  >
+                    Save as My Default Business Profile
+                  </button>
+                )}
               </div>
             </section>
 
