@@ -10,7 +10,7 @@ export const MedicalLayout: React.FC<{ data: MedicalData }> = ({ data }) => (
       </div>
       <div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Attending Physician</p>
-        <p className="text-[12px] font-black text-slate-900">Dr. {data.doctorName || 'Not Assigned'}</p>
+        <p className="text-[12px] font-black text-slate-900">{data.doctorName || 'Not Assigned'}</p>
       </div>
     </div>
     <div className="flex items-center gap-4 border-l border-sky-100 pl-8">

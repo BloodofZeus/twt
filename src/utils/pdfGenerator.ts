@@ -72,7 +72,18 @@ export const generateProgrammaticPDF = async (data: ReceiptData): Promise<Blob> 
   currentY += 6;
   addText(data.customerName, margin, currentY, 11, 'bold', [15, 23, 42]);
   currentY += 5;
-  addText(data.customerAddress || '', margin, currentY, 9, 'normal', [100, 116, 139]);
+  if (data.customerAddress) {
+    addText(data.customerAddress, margin, currentY, 9, 'normal', [100, 116, 139]);
+    currentY += 4;
+  }
+  if (data.customerPhone) {
+    addText(`TEL: ${data.customerPhone}`, margin, currentY, 8, 'normal', [148, 163, 184]);
+    currentY += 4;
+  }
+  if (data.customerEmail) {
+    addText(data.customerEmail, margin, currentY, 8, 'normal', [148, 163, 184]);
+    currentY += 4;
+  }
   
   // Industry specific box (if applicable)
   const middleX = pageWidth / 2;
