@@ -16,22 +16,10 @@ import { INDUSTRY_DEFAULTS, DEFAULT_CUSTOMER_PERSONA } from './utils/personaDefa
 
 const App: React.FC = () => {
   const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
-  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(() => {
-    const draft = localStorage.getItem('twt_invoice_draft');
-    if (draft) {
-      try {
-        return JSON.parse(draft);
-      } catch (err) {
-        console.error('Failed to parse draft', err);
-      }
-    }
-    return null;
-  });
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
   const [settings] = useState<AppSettings>(() => getAppSettings());
-  const [isEditing, setIsEditing] = useState(() => !!localStorage.getItem('twt_invoice_draft'));
-  const [view, setView] = useState<'dashboard' | 'editor'>(() => 
-    localStorage.getItem('twt_invoice_draft') ? 'editor' : 'dashboard'
-  );
+  const [isEditing, setIsEditing] = useState(false);
+  const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Autosave draft
