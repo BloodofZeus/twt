@@ -1,6 +1,15 @@
 export const THEMES = ['hospital', 'pharmacy', 'electricity', 'water', 'retail'] as const;
 export type ReceiptTheme = (typeof THEMES)[number];
 
+export const CURRENCIES = [
+  { code: 'USD', symbol: '$', label: 'US Dollar ($)' },
+  { code: 'EUR', symbol: '€', label: 'Euro (€)' },
+  { code: 'GBP', symbol: '£', label: 'British Pound (£)' },
+  { code: 'GHS', symbol: 'GH₵', label: 'Ghanaian Cedi (GH₵)' },
+  { code: 'CAD', symbol: 'C$', label: 'Canadian Dollar (C$)' },
+  { code: 'NGN', symbol: '₦', label: 'Nigerian Naira (₦)' }
+] as const;
+
 export type DocumentType = 'invoice' | 'receipt';
 
 export interface CompanyDetails {

@@ -4,7 +4,7 @@ import {
   Receipt as ReceiptIcon, Activity, Gauge 
 } from 'lucide-react';
 import type { ReceiptData, ReceiptItem } from '../model';
-import { THEMES } from '../model';
+import { THEMES, CURRENCIES } from '../model';
 import { getIndustryTerminology, INDUSTRY_SNIPPETS } from '../utils/terminology';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -204,6 +204,27 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUpl
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 pt-6 border-t border-slate-200/60">
+          <label className="block text-xs font-black uppercase text-slate-400 mb-3 tracking-widest">Document Currency</label>
+          <div className="flex flex-wrap gap-2">
+            {CURRENCIES.map((c) => (
+              <button
+                key={c.code}
+                onClick={() => onChange({ ...data, currency: c.symbol })}
+                className={cn(
+                  "py-2 px-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 flex items-center gap-2",
+                  data.currency === c.symbol 
+                    ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100" 
+                    : "bg-white border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500"
+                )}
+              >
+                <span className="text-sm">{c.symbol}</span>
+                <span>{c.code}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -411,7 +432,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUpl
                       type="number"
                       value={item.price}
                       onChange={(e) => handleItemChange(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))}
-                      className="input-field pl-8"
+                      className={cn("input-field", data.currency.length > 2 ? "pl-12" : data.currency.length > 1 ? "pl-10" : "pl-8")}
                     />
                   </div>
                 </div>
