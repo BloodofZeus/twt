@@ -21,7 +21,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const App: React.FC = () => {
-  const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
+  const [receipts, setReceipts] = useState<ReceiptData[]>([]);
   const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
   const [settings, setSettings] = useState<AppSettings>(() => getAppSettings());
   const [, setIsEditing] = useState(false);
@@ -34,13 +34,31 @@ const App: React.FC = () => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     localStorage.removeItem('twt_invoice_draft');
     
-    // Check auth periodically or on focus
-    const interval = setInterval(() => {
-      if (!checkAuth()) setIsAuthenticated(false);
-    }, 1000 * 60); // Check every minute
+    const syncData = () => {
+      const auth = checkAuth();
+      if (auth !== isAuthenticated) {
+        setIsAuthenticated(auth);
+      }
+      if (auth) {
+        setReceipts(getAllReceipts());
+        setSettings(getAppSettings());
+      }
+    };
+
+    // Initial sync
+    syncData();
     
-    return () => clearInterval(interval);
-  }, []);
+    // Check auth periodically
+    const interval = setInterval(syncData, 1000 * 10);
+    
+    // Check auth on window focus
+    window.addEventListener('focus', syncData);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', syncData);
+    };
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
