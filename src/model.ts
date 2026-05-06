@@ -53,6 +53,7 @@ export interface ReceiptData {
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
+  customerEmail?: string;
   date: string;
   time: string;
   dueDate?: string;

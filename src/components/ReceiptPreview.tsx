@@ -163,10 +163,24 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
             <span className="font-bold opacity-50 uppercase">{term.customerLabel}:</span>
             <span className="font-black text-right uppercase">{data.customerName || 'Walk-in Customer'}</span>
             
+            {data.customerAddress && (
+              <>
+                <span className="font-bold opacity-50 uppercase">Address:</span>
+                <span className="font-black text-right uppercase">{data.customerAddress}</span>
+              </>
+            )}
+            
             {data.customerPhone && (
               <>
                 <span className="font-bold opacity-50 uppercase">Contact:</span>
                 <span className="font-black text-right uppercase">{data.customerPhone}</span>
+              </>
+            )}
+
+            {data.customerEmail && (
+              <>
+                <span className="font-bold opacity-50 uppercase">Email:</span>
+                <span className="font-black text-right uppercase">{data.customerEmail}</span>
               </>
             )}
             

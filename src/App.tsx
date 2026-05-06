@@ -18,16 +18,14 @@ const App: React.FC = () => {
   const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
   const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
   const [settings] = useState<AppSettings>(() => getAppSettings());
-  const [isEditing, setIsEditing] = useState(false);
+  const [, setIsEditing] = useState(false);
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Autosave draft
+  // Clear any temporary draft on initial mount to ensure refresh starts fresh
   useEffect(() => {
-    if (activeReceipt && isEditing) {
-      localStorage.setItem('twt_invoice_draft', JSON.stringify(activeReceipt));
-    }
-  }, [activeReceipt, isEditing]);
+    localStorage.removeItem('twt_invoice_draft');
+  }, []);
 
   const emptyReceipt = (type: DocumentType = 'receipt'): ReceiptData => {
     const id = typeof crypto.randomUUID === 'function' 
@@ -49,6 +47,7 @@ const App: React.FC = () => {
       customerName: '',
       customerPhone: '',
       customerAddress: '',
+      customerEmail: '',
       date: today.toISOString().split('T')[0],
       time: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       dueDate: type === 'invoice' ? dueDate.toISOString().split('T')[0] : undefined,
@@ -161,7 +160,7 @@ const App: React.FC = () => {
         data.customerName = DEFAULT_CUSTOMER_PERSONA.name;
         data.customerAddress = DEFAULT_CUSTOMER_PERSONA.address;
         data.customerPhone = DEFAULT_CUSTOMER_PERSONA.phone;
-// customerEmail is not part of ReceiptData, so we skip setting it
+        data.customerEmail = DEFAULT_CUSTOMER_PERSONA.email;
       }
     }
 
