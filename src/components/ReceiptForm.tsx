@@ -355,6 +355,11 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onSave, onChange, onUpl
           </div>
           <div className="space-y-4">
             <input type="text" name="customerName" value={data.customerName} onChange={handleChange} className="input-field" placeholder={term.customerLabel} />
+            <input type="text" name="customerAddress" value={data.customerAddress || ''} onChange={handleChange} className="input-field" placeholder="Customer Address" />
+            <div className="grid grid-cols-2 gap-2">
+              <input type="text" name="customerPhone" value={data.customerPhone || ''} onChange={handleChange} className="input-field" placeholder="Customer Phone" />
+              <input type="email" name="customerEmail" value={data.customerEmail || ''} onChange={handleChange} className="input-field" placeholder="Customer Email" />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Issue Date</label>

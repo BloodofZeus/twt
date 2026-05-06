@@ -37,23 +37,32 @@
     @apply mx-auto overflow-hidden transition-all duration-300;
   }
 
+  /* Print and Capture root styles */
+  .invoice-layout-root, .receipt-preview-root {
+    background-color: #ffffff;
+    color: #1e293b;
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+  }
+
   /* Force standard colors for capture area to avoid oklch errors */
-  .receipt-container * {
+  .invoice-layout-root *, .receipt-preview-root *, .receipt-container * {
     border-color: #e2e8f0; /* slate-200 hex */
   }
 
-  .receipt-container .text-slate-900 { color: #0f172a !important; }
-  .receipt-container .text-slate-800 { color: #1e293b !important; }
-  .receipt-container .text-slate-700 { color: #334155 !important; }
-  .receipt-container .text-slate-600 { color: #475569 !important; }
-  .receipt-container .text-slate-500 { color: #64748b !important; }
-  .receipt-container .text-slate-400 { color: #94a3b8 !important; }
+  .invoice-layout-root .text-slate-900, .receipt-preview-root .text-slate-900, .receipt-container .text-slate-900 { color: #0f172a !important; }
+  .invoice-layout-root .text-slate-800, .receipt-preview-root .text-slate-800, .receipt-container .text-slate-800 { color: #1e293b !important; }
+  .invoice-layout-root .text-slate-700, .receipt-preview-root .text-slate-700, .receipt-container .text-slate-700 { color: #334155 !important; }
+  .invoice-layout-root .text-slate-600, .receipt-preview-root .text-slate-600, .receipt-container .text-slate-600 { color: #475569 !important; }
+  .invoice-layout-root .text-slate-500, .receipt-preview-root .text-slate-500, .receipt-container .text-slate-500 { color: #64748b !important; }
+  .invoice-layout-root .text-slate-400, .receipt-preview-root .text-slate-400, .receipt-container .text-slate-400 { color: #94a3b8 !important; }
   
-  .receipt-container .bg-slate-50 { background-color: #f8fafc !important; }
-  .receipt-container .bg-slate-100 { background-color: #f1f5f9 !important; }
+  .invoice-layout-root .bg-slate-50, .receipt-preview-root .bg-slate-50, .receipt-container .bg-slate-50 { background-color: #f8fafc !important; }
+  .invoice-layout-root .bg-slate-100, .receipt-preview-root .bg-slate-100, .receipt-container .bg-slate-100 { background-color: #f1f5f9 !important; }
   
-  .receipt-container .border-slate-100 { border-color: #f1f5f9 !important; }
-   .receipt-container .border-slate-200 { border-color: #e2e8f0 !important; }
+  .invoice-layout-root .border-slate-100, .receipt-preview-root .border-slate-100, .receipt-container .border-slate-100 { border-color: #f1f5f9 !important; }
+  .invoice-layout-root .border-slate-200, .receipt-preview-root .border-slate-200, .receipt-container .border-slate-200 { border-color: #e2e8f0 !important; }
 
    /* Sky theme fallbacks */
    .receipt-container .bg-sky-50\/50 { background-color: rgba(240, 249, 255, 0.5) !important; }
@@ -102,12 +111,14 @@
     visibility: hidden;
   }
   
-  /* Show only the receipt container */
-  .receipt-container, .receipt-container * {
+  /* Show only the receipt container and its specific layouts */
+  .receipt-container, .receipt-container *, 
+  .invoice-layout-root, .invoice-layout-root *,
+  .receipt-preview-root, .receipt-preview-root * {
     visibility: visible !important;
   }
   
-  .receipt-container {
+  .receipt-container, .invoice-layout-root, .receipt-preview-root {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;

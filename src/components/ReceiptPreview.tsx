@@ -32,7 +32,7 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
     return (
       <div 
         ref={ref}
-        className="receipt-container w-full max-w-[800px] mx-auto shadow-2xl overflow-hidden print:shadow-none bg-white min-h-[1123px]"
+        className="invoice-layout-root w-full max-w-[800px] mx-auto shadow-2xl overflow-hidden print:shadow-none bg-white min-h-[1123px]"
       >
         <InvoiceLayout data={data} />
       </div>
@@ -44,22 +44,22 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
       switch (data.theme) {
         case 'hospital':
           return {
-            container: "bg-white p-8 shadow-xl font-sans text-[12px] text-slate-800 border-l-[12px] border-sky-500 max-w-[420px]",
+            container: "receipt-preview-root bg-white p-8 shadow-xl font-sans text-[12px] text-slate-800 border-l-[12px] border-sky-500 max-w-[420px]",
             header: "flex justify-between items-start mb-8 text-left",
             divider: "border-t-2 border-sky-100 my-4",
             accent: "text-sky-600 font-black",
             tableHeader: "bg-sky-50 text-sky-800",
-            title: "MEDICAL RECORD & RECEIPT",
+            title: "MEDICAL SERVICE RECEIPT",
             icon: <HeartPulse className="text-sky-600" size={48} strokeWidth={1.5} />
           };
         case 'pharmacy':
           return {
-            container: "bg-white p-8 shadow-xl font-modern text-[12px] text-slate-800 border-r-[12px] border-emerald-500 max-w-[420px]",
+            container: "receipt-preview-root bg-white p-8 shadow-xl font-sans text-[12px] text-slate-800 border-r-[12px] border-emerald-500 max-w-[420px]",
             header: "flex flex-row-reverse justify-between items-start mb-8 text-right",
             divider: "border-t-2 border-emerald-100 my-4",
             accent: "text-emerald-600 font-black",
             tableHeader: "bg-emerald-50 text-emerald-800",
-            title: "PHARMACY DISPENSARY",
+            title: "PHARMACY DISPENSATION",
             icon: <Pill className="text-emerald-600" size={48} strokeWidth={1.5} />
           };
         case 'electricity':
@@ -67,7 +67,7 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
           const color = data.theme === 'electricity' ? 'amber' : 'blue';
           const Icon = data.theme === 'electricity' ? Zap : Droplets;
           return {
-            container: `bg-white p-8 shadow-xl font-modern text-[12px] text-slate-800 border-t-[12px] border-${color}-500 max-w-[420px]`,
+            container: `receipt-preview-root bg-white p-8 shadow-xl font-modern text-[12px] text-slate-800 border-t-[12px] border-${color}-500 max-w-[420px]`,
             header: "grid grid-cols-2 gap-4 mb-8 text-left",
             divider: `border-t-2 border-${color}-100 my-4`,
             accent: `text-${color}-600 font-black`,
@@ -79,7 +79,7 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
         case 'retail':
         default:
           return {
-            container: "bg-white p-6 shadow-xl font-mono text-[12px] text-slate-800 border border-slate-100 max-w-[380px] mx-auto",
+            container: "receipt-preview-root bg-white p-6 shadow-xl font-mono text-[12px] text-slate-800 border border-slate-100 max-w-[380px] mx-auto",
             header: "flex flex-col items-center text-center mb-6",
             divider: "border-t border-dashed border-slate-300 my-4",
             accent: "text-black font-bold",
@@ -93,7 +93,10 @@ const ReceiptPreview = forwardRef<HTMLDivElement, ReceiptPreviewProps>(({ data }
     const style = getReceiptStyle();
 
     return (
-      <div ref={ref} className={cn("relative overflow-hidden", style.container)}>
+      <div 
+        ref={ref}
+        className={cn("receipt-container relative", style.container)}
+      >
         {/* Background Industry Icon */}
         {data.showIndustryBackground && (
           <div className="absolute inset-x-0 bottom-0 top-32 pointer-events-none flex items-center justify-center opacity-[0.04] z-0 select-none">

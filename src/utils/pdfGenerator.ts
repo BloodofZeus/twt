@@ -3,6 +3,15 @@ import autoTable from 'jspdf-autotable';
 import type { ReceiptData } from '../model';
 
 export const generateProgrammaticPDF = async (data: ReceiptData): Promise<Blob> => {
+  // Safe currency symbol handling for PDF (standard fonts have limited support)
+  const getSafeCurrency = (symbol: string) => {
+    if (symbol === 'GH₵') return 'GHS ';
+    if (symbol === '₦') return 'NGN ';
+    return symbol;
+  };
+
+  const safeCurrency = getSafeCurrency(data.currency);
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -83,8 +92,8 @@ export const generateProgrammaticPDF = async (data: ReceiptData): Promise<Blob> 
   const tableData = data.items.map(item => [
     item.description || 'General Service',
     item.quantity.toString(),
-    `${data.currency}${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-    `${data.currency}${(item.quantity * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    `${safeCurrency}${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+    `${safeCurrency}${(item.quantity * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   ]);
 
   autoTable(doc, {
@@ -119,18 +128,18 @@ export const generateProgrammaticPDF = async (data: ReceiptData): Promise<Blob> 
     currentY += isTotal ? 8 : 6;
   };
 
-  addSummaryRow('Subtotal:', `${data.currency}${data.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
+  addSummaryRow('Subtotal:', `${safeCurrency}${data.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
   if (data.taxAmount > 0) {
-    addSummaryRow(`Tax (${data.taxRate}%):`, `${data.currency}${data.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
+    addSummaryRow(`Tax (${data.taxRate}%):`, `${safeCurrency}${data.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
   }
   if (data.discount > 0) {
-    addSummaryRow('Discount:', `-${data.currency}${data.discount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
+    addSummaryRow('Discount:', `-${safeCurrency}${data.discount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
   }
   
   currentY += 2;
   doc.setDrawColor(226, 232, 240);
   doc.line(summaryX, currentY - 4, valX, currentY - 4);
-  addSummaryRow(data.documentType === 'invoice' ? 'GRAND TOTAL:' : 'TOTAL PAID:', `${data.currency}${data.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, true);
+  addSummaryRow(data.documentType === 'invoice' ? 'GRAND TOTAL:' : 'TOTAL PAID:', `${safeCurrency}${data.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, true);
 
   // 6. Footer
   currentY = Math.max(currentY + 20, doc.internal.pageSize.getHeight() - 40);

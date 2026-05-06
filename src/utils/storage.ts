@@ -8,15 +8,15 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultTaxRate: 0,
   defaultDocumentType: 'invoice',
   companyProfile: {
-    name: 'Lincoln Square Boutique',
-    address: '1 Old State Capitol Plaza, Springfield, IL 62701, USA',
-    email: 'hello@lincoln-square-boutique.com',
-    phone: '+1 (217) 555-1122',
-    website: 'www.lincoln-square-boutique.com',
-    taxId: 'US-217-0001',
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
+    website: '',
+    taxId: '',
     logoUrl: '/defaults/retail-logo.png'
   },
-  defaultFooterText: 'Thank you for shopping local in Springfield!'
+  defaultFooterText: ''
 };
 
 export const saveReceipt = (receipt: ReceiptData) => {
