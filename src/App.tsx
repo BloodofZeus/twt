@@ -3,14 +3,12 @@ import ReceiptForm from './components/ReceiptForm';
 import ReceiptPreview from './components/ReceiptPreview';
 import ReceiptList from './components/ReceiptList';
 import type { ReceiptData, AppSettings, DocumentType } from './model';
-// import { THEMES } from './model'; // removed unused import
 import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
 import { 
   Download, Printer, Plus, LayoutDashboard, Receipt as ReceiptIcon, 
   Settings, BarChart3, History, Building2, Mail, Image as ImageIcon 
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
-// jsPDF import removed - not used in current implementation
 import { useReactToPrint } from 'react-to-print';
 import { imageUrlToBase64 } from './utils/image';
 import { generateProgrammaticPDF } from './utils/pdfGenerator';
