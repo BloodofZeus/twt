@@ -6,7 +6,7 @@ import type { ReceiptData, AppSettings, DocumentType } from './model';
 import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
 import { 
   Printer, Plus, Receipt as ReceiptIcon, 
-  Image as ImageIcon, Building2, Share2
+  Image as ImageIcon, Share2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
@@ -417,19 +417,6 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* Profile Sidebar (Placeholder for Notion feel) */}
-      <div className="fixed bottom-8 right-8 no-print">
-        <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-2xl flex items-center gap-4 border border-white/10 animate-in slide-in-from-right-8 duration-1000">
-          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-            <Building2 size={18} strokeWidth={1.5} />
-          </div>
-          <div className="pr-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Enterprise Profile</p>
-            <p className="text-xs font-black uppercase tracking-tight truncate max-w-[150px]">{settings.companyProfile.name || 'Set Up Business'}</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
