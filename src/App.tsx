@@ -6,7 +6,7 @@ import type { ReceiptData, AppSettings, DocumentType } from './model';
 import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
 import { 
   Printer, Plus, Receipt as ReceiptIcon, 
-  Image as ImageIcon, Building2
+  Image as ImageIcon, Building2, Share2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
@@ -25,10 +25,11 @@ const App: React.FC = () => {
   const [settings] = useState<AppSettings>(() => getAppSettings());
   const [, setIsEditing] = useState(false);
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
+  const [isMobile, setIsMobile] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Clear any temporary draft on initial mount to ensure refresh starts fresh
   useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     localStorage.removeItem('twt_invoice_draft');
   }, []);
 
@@ -144,10 +145,47 @@ const App: React.FC = () => {
   const handleDownloadPDF = useReactToPrint({
     contentRef: receiptRef,
     documentTitle: activeReceipt ? `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}` : 'document',
+    onBeforePrint: async () => {
+      if (isMobile) {
+        alert('On mobile: Please select "Save as PDF" from the print options to download the document.');
+      }
+    },
     onAfterPrint: () => {
       console.log('Document printed successfully');
     }
   });
+
+  const handleShare = async () => {
+    if (!receiptRef.current || !activeReceipt) return;
+    
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        ignoreElements: (el) => el.classList.contains('no-print')
+      });
+      
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) return;
+
+      const file = new File([blob], `TWT-${activeReceipt.id.slice(0, 8).toUpperCase()}.png`, { type: 'image/png' });
+      
+      if (navigator.share) {
+        await navigator.share({
+          files: [file],
+          title: `${activeReceipt.documentType.toUpperCase()} - ${activeReceipt.id.slice(0, 8).toUpperCase()}`,
+          text: `Here is the ${activeReceipt.documentType} from ${activeReceipt.company.name}`
+        });
+      } else {
+        handleDownloadImage();
+      }
+    } catch (error) {
+      console.error('Share Error:', error);
+      handleDownloadImage();
+    }
+  };
 
   const handleDownloadImage = async () => {
     if (!receiptRef.current || !activeReceipt) return;
@@ -329,12 +367,20 @@ const App: React.FC = () => {
                     <h3 className="font-black text-slate-900 uppercase tracking-widest text-[10px]">High Fidelity Preview</h3>
                   </div>
                   <div className="flex items-center gap-3">
+                    {isMobile && (
+                      <button 
+                        onClick={handleShare}
+                        className="p-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all active:scale-95"
+                      >
+                        <Share2 size={14} strokeWidth={2.5} />
+                      </button>
+                    )}
                     <button 
                       onClick={handleDownloadPDF}
                       className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-black transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest"
                     >
                       <Printer size={14} strokeWidth={2} />
-                      Download PDF
+                      {isMobile ? 'Export PDF' : 'Download PDF'}
                     </button>
                     <button 
                       onClick={handleDownloadImage}
