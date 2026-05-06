@@ -165,11 +165,17 @@ const App: React.FC = () => {
     documentTitle: activeReceipt ? `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}` : 'document',
     pageStyle: `
       @page {
+        size: auto;
         margin: 0 !important;
       }
       @media print {
         body {
           -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        html {
           margin: 0 !important;
         }
       }

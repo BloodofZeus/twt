@@ -73,16 +73,13 @@
 }
 
 @page {
-  size: A4;
-  margin: 0mm !important;
+  size: auto;
+  margin: 0 !important;
 }
 
 @layer utilities {
   @media print {
     html, body {
-      height: 297mm;
-      width: 210mm;
-      background: white !important;
       margin: 0 !important;
       padding: 0 !important;
       -webkit-print-color-adjust: exact;
@@ -93,20 +90,19 @@
     .invoice-layout-root {
       position: relative !important;
       width: 210mm !important;
-      height: 297mm !important;
+      min-height: 297mm !important;
+      height: auto !important;
       margin: 0 !important;
-      padding: 10mm !important; /* Internal breathing room for A4 */
+      padding: 10mm !important; 
       box-shadow: none !important;
       border: none !important;
       visibility: visible !important;
-      overflow: hidden !important;
-      page-break-after: avoid !important;
-      page-break-before: avoid !important;
+      overflow: visible !important;
     }
 
     .receipt-preview-root {
       position: relative !important;
-      width: 80mm !important; /* Typical receipt width */
+      width: 80mm !important; 
       margin: 0 auto !important;
       padding: 5mm !important;
       box-shadow: none !important;
