@@ -11,7 +11,6 @@ import {
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
 import { imageUrlToBase64 } from './utils/image';
-import { generateProgrammaticPDF } from './utils/pdfGenerator';
 import { INDUSTRY_DEFAULTS, DEFAULT_CUSTOMER_PERSONA } from './utils/personaDefaults';
 
 const App: React.FC = () => {
@@ -97,11 +96,6 @@ const App: React.FC = () => {
         const jsonFilename = `${activeReceipt.documentType.toUpperCase()}_${idShort}.json`;
         await saveToServer(jsonFilename, jsonBlob, folder);
 
-        // 2. Save Programmatic PDF backup (Automatic & Silent)
-        const pdfBlob = await generateProgrammaticPDF(activeReceipt);
-        const pdfFilename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${idShort}.pdf`;
-        await saveToServer(pdfFilename, pdfBlob, folder);
-
       } catch (error) {
         console.error('Failed to save data to server:', error);
       }
@@ -110,22 +104,6 @@ const App: React.FC = () => {
       setView('dashboard');
       localStorage.removeItem('twt_invoice_draft');
       alert(`${activeReceipt.documentType === 'invoice' ? 'Invoice' : 'Receipt'} Finalized and Saved to Local Folder!`);
-    }
-  };
-
-  const handleProgrammaticExport = async () => {
-    if (!activeReceipt) return;
-    try {
-      const pdfBlob = await generateProgrammaticPDF(activeReceipt);
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Programmatic Export Error:', error);
-      alert('Failed to generate Quick PDF. Using the Print button instead.');
     }
   };
 
@@ -244,11 +222,20 @@ const App: React.FC = () => {
     onAfterPrint: async () => {
       if (!activeReceipt) return;
       // After browser print dialog, still attempt to save a copy to server for backup
-      // We use the image capture for the server backup copy as it's automated
       try {
         const element = receiptRef.current;
         if (!element) return;
-        const canvas = await html2canvas(element, { scale: 2, useCORS: true, allowTaint: true });
+        
+        // Wait for fonts and styles
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const canvas = await html2canvas(element, { 
+          scale: 2, 
+          useCORS: true, 
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          ignoreElements: (el) => el.classList.contains('no-print')
+        });
         const imgData = canvas.toDataURL('image/png');
         const filename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}.png`;
         const response = await fetch(imgData);
@@ -264,71 +251,61 @@ const App: React.FC = () => {
     if (!receiptRef.current || !activeReceipt) return;
     
     try {
-      // Create a temporary data object with logo converted to base64
+      // Ensure logo is base64 for html2canvas
       if (activeReceipt.company.logoUrl && !activeReceipt.company.logoUrl.startsWith('data:')) {
         const base64Logo = await imageUrlToBase64(activeReceipt.company.logoUrl);
         handleDataChange({
           ...activeReceipt,
           company: { ...activeReceipt.company, logoUrl: base64Logo }
         });
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Give time for state update and re-render
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       const element = receiptRef.current;
       
-      // Ensure images are loaded
-      const images = element.getElementsByTagName('img');
-      const loadPromises = Array.from(images).map(img => {
+      // Ensure images are fully loaded
+      const images = Array.from(element.getElementsByTagName('img'));
+      await Promise.all(images.map(img => {
         if (img.complete) return Promise.resolve();
         return new Promise((resolve) => {
           img.onload = () => resolve(true);
-          img.onerror = () => {
-            console.warn('Image failed to load, continuing without it:', img.src);
-            resolve(false);
-          };
+          img.onerror = () => resolve(false);
         });
-      });
-      
-      await Promise.all(loadPromises);
+      }));
 
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 3, // High quality
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: true,
+        logging: false,
         imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('.receipt-container') as HTMLElement;
-          if (clonedElement) {
-            clonedElement.style.transform = 'none';
-            clonedElement.style.position = 'relative';
-            clonedElement.style.margin = '0';
-            clonedElement.style.boxShadow = 'none';
-          }
-        }
+        removeContainer: true,
+        ignoreElements: (el) => el.classList.contains('no-print')
       });
       
       const imgData = canvas.toDataURL('image/png', 1.0);
-      const filename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}.png`;
-      
-      // Convert DataURL to Blob for server upload
-      const response = await fetch(imgData);
-      const blob = await response.blob();
-      
-      // Save to server
-      await saveToServer(filename, blob, `invoices/${activeReceipt.id.slice(0, 8).toUpperCase()}`);
+      const idShort = activeReceipt.id.slice(0, 8).toUpperCase();
+      const filename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${idShort}.png`;
       
       // Download locally
       const link = document.createElement('a');
       link.download = filename;
       link.href = imgData;
+      document.body.appendChild(link);
       link.click();
-      alert('Image Generated and Saved to Server!');
+      document.body.removeChild(link);
+      
+      // Also save to server for backup
+      const response = await fetch(imgData);
+      const blob = await response.blob();
+      await saveToServer(filename, blob, `invoices/${idShort}`);
+      
+      alert('Image Exported Successfully!');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Image Generation Error:', error);
-      alert(`Failed to generate image: ${message}. Fix: Try using the "Upload Image" button to upload your logo from your computer instead.`);
+      alert('Failed to generate image. Please try the "Download PDF" option instead.');
     }
   };
 
@@ -537,18 +514,12 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex gap-1.5 md:gap-2">
                   <button 
-                    onClick={handleProgrammaticExport}
-                    className="p-2 md:p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-blue-600 hover:bg-blue-100 shadow-sm transition-all active:scale-95"
-                    title="Quick PDF (Code-Generated)"
-                  >
-                    <Download size={18} className="md:w-5 md:h-5" />
-                  </button>
-                  <button 
                     onClick={handleDownloadPDF}
-                    className="p-2 md:p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95 font-bold"
                     title="Professional Print (High-Fidelity)"
                   >
                     <Printer size={18} className="md:w-5 md:h-5" />
+                    <span>Download PDF</span>
                   </button>
                   <button 
                     onClick={handleDownloadImage}

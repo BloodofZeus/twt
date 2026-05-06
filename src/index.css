@@ -48,36 +48,48 @@
 
   /* Force standard colors for capture area to avoid oklch errors */
   .invoice-layout-root *, .receipt-preview-root *, .receipt-container * {
-    border-color: #e2e8f0; /* slate-200 hex */
+    border-color: #e2e8f0 !important; /* slate-200 hex */
   }
 
-  .invoice-layout-root .text-slate-900, .receipt-preview-root .text-slate-900, .receipt-container .text-slate-900 { color: #0f172a !important; }
-  .invoice-layout-root .text-slate-800, .receipt-preview-root .text-slate-800, .receipt-container .text-slate-800 { color: #1e293b !important; }
-  .invoice-layout-root .text-slate-700, .receipt-preview-root .text-slate-700, .receipt-container .text-slate-700 { color: #334155 !important; }
-  .invoice-layout-root .text-slate-600, .receipt-preview-root .text-slate-600, .receipt-container .text-slate-600 { color: #475569 !important; }
-  .invoice-layout-root .text-slate-500, .receipt-preview-root .text-slate-500, .receipt-container .text-slate-500 { color: #64748b !important; }
-  .invoice-layout-root .text-slate-400, .receipt-preview-root .text-slate-400, .receipt-container .text-slate-400 { color: #94a3b8 !important; }
+  /* Core Palette Fallbacks (No OKLCH) */
+  .text-slate-900 { color: #0f172a !important; }
+  .text-slate-800 { color: #1e293b !important; }
+  .text-slate-700 { color: #334155 !important; }
+  .text-slate-600 { color: #475569 !important; }
+  .text-slate-500 { color: #64748b !important; }
+  .text-slate-400 { color: #94a3b8 !important; }
+  .text-slate-300 { color: #cbd5e1 !important; }
+
+  .bg-slate-50 { background-color: #f8fafc !important; }
+  .bg-slate-100 { background-color: #f1f5f9 !important; }
+  .bg-slate-200 { background-color: #e2e8f0 !important; }
+  .bg-slate-800 { background-color: #1e293b !important; }
+  .bg-slate-900 { background-color: #0f172a !important; }
   
-  .invoice-layout-root .bg-slate-50, .receipt-preview-root .bg-slate-50, .receipt-container .bg-slate-50 { background-color: #f8fafc !important; }
-  .invoice-layout-root .bg-slate-100, .receipt-preview-root .bg-slate-100, .receipt-container .bg-slate-100 { background-color: #f1f5f9 !important; }
-  
-  .invoice-layout-root .border-slate-100, .receipt-preview-root .border-slate-100, .receipt-container .border-slate-100 { border-color: #f1f5f9 !important; }
-  .invoice-layout-root .border-slate-200, .receipt-preview-root .border-slate-200, .receipt-container .border-slate-200 { border-color: #e2e8f0 !important; }
+  .border-slate-50 { border-color: #f8fafc !important; }
+  .border-slate-100 { border-color: #f1f5f9 !important; }
+  .border-slate-200 { border-color: #e2e8f0 !important; }
 
-   /* Sky theme fallbacks */
-   .receipt-container .bg-sky-50\/50 { background-color: rgba(240, 249, 255, 0.5) !important; }
-   .receipt-container .border-sky-100 { border-color: #e0f2fe !important; }
-   .receipt-container .text-sky-600 { color: #0284c7 !important; }
+  .text-blue-600 { color: #2563eb !important; }
+  .bg-blue-600 { background-color: #2563eb !important; }
+  .bg-blue-50 { background-color: #eff6ff !important; }
+  .border-blue-500 { border-color: #3b82f6 !important; }
 
-   /* Emerald theme fallbacks */
-   .receipt-container .bg-emerald-50\/50 { background-color: rgba(236, 253, 245, 0.5) !important; }
-   .receipt-container .border-emerald-100 { border-color: #d1fae5 !important; }
-   .receipt-container .text-emerald-600 { color: #059669 !important; }
+  /* Industry Specific OKLCH Overrides */
+  .text-emerald-600 { color: #059669 !important; }
+  .bg-emerald-50 { background-color: #ecfdf5 !important; }
+  .border-emerald-500 { border-color: #10b981 !important; }
 
-   /* Amber theme fallbacks */
-   .receipt-container .bg-amber-50\/50 { background-color: rgba(255, 251, 235, 0.5) !important; }
-   .receipt-container .border-amber-100 { border-color: #fef3c7 !important; }
-   .receipt-container .text-amber-600 { color: #d97706 !important; }
+  .text-amber-600 { color: #d97706 !important; }
+  .bg-amber-50 { background-color: #fffbeb !important; }
+  .border-amber-500 { border-color: #f59e0b !important; }
+
+  .text-sky-600 { color: #0284c7 !important; }
+  .bg-sky-50 { background-color: #f0f9ff !important; }
+  .border-sky-500 { border-color: #0ea5e9 !important; }
+
+  .text-red-500 { color: #ef4444 !important; }
+  .bg-red-50 { background-color: #fef2f2 !important; }
 
    .btn-primary {
      @apply px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 active:scale-95 font-bold flex items-center gap-2;
