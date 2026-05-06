@@ -24,126 +24,92 @@
 
 @layer base {
   body {
-    background-color: #f8fafc;
-    color: #0f172a; /* slate-900 hex */
-    @apply min-h-screen selection:bg-blue-100 selection:text-blue-900;
+    background-color: #ffffff;
+    color: #0f172a;
+    @apply min-h-screen selection:bg-slate-100 selection:text-slate-900;
   }
 }
 
 @layer components {
-  .receipt-container {
-    background-color: #ffffff;
-    color: #1e293b; /* slate-800 hex */
-    @apply mx-auto overflow-hidden transition-all duration-300;
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-slate-100 rounded-xl focus:ring-0 focus:border-slate-900 outline-none transition-all text-sm font-bold text-slate-900 placeholder:text-slate-200 placeholder:font-black placeholder:uppercase placeholder:tracking-widest;
   }
 
-  /* Print and Capture root styles */
-  .invoice-layout-root, .receipt-preview-root {
-    background-color: #ffffff;
-    color: #1e293b;
-    width: 100% !important;
-    max-width: 800px !important;
-    margin: 0 auto !important;
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #e2e8f0;
   }
 
-  /* Force standard colors for capture area to avoid oklch errors */
-  .invoice-layout-root *, .receipt-preview-root *, .receipt-container * {
-    border-color: #e2e8f0 !important; /* slate-200 hex */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  /* Core Palette Fallbacks (No OKLCH) */
+  /* Core Palette Fallbacks */
   .text-slate-900 { color: #0f172a !important; }
   .text-slate-800 { color: #1e293b !important; }
-  .text-slate-700 { color: #334155 !important; }
-  .text-slate-600 { color: #475569 !important; }
-  .text-slate-500 { color: #64748b !important; }
   .text-slate-400 { color: #94a3b8 !important; }
   .text-slate-300 { color: #cbd5e1 !important; }
+  .text-slate-200 { color: #e2e8f0 !important; }
 
-  .bg-slate-50 { background-color: #f8fafc !important; }
-  .bg-slate-100 { background-color: #f1f5f9 !important; }
-  .bg-slate-200 { background-color: #e2e8f0 !important; }
-  .bg-slate-800 { background-color: #1e293b !important; }
   .bg-slate-900 { background-color: #0f172a !important; }
+  .bg-slate-50 { background-color: #f8fafc !important; }
   
-  .border-slate-50 { border-color: #f8fafc !important; }
+  .border-slate-900 { border-color: #0f172a !important; }
   .border-slate-100 { border-color: #f1f5f9 !important; }
-  .border-slate-200 { border-color: #e2e8f0 !important; }
+  .border-slate-50 { border-color: #f8fafc !important; }
+}
 
-  .text-blue-600 { color: #2563eb !important; }
-  .bg-blue-600 { background-color: #2563eb !important; }
-  .bg-blue-50 { background-color: #eff6ff !important; }
-  .border-blue-500 { border-color: #3b82f6 !important; }
+@layer utilities {
+  @media print {
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body { 
+      background: white !important; 
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .no-print { display: none !important; }
+    
+    .invoice-layout-root {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 210mm !important;
+      height: 297mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
+      visibility: visible !important;
+      overflow: hidden !important;
+      page-break-after: avoid !important;
+      page-break-before: avoid !important;
+    }
 
-  /* Industry Specific OKLCH Overrides */
-  .text-emerald-600 { color: #059669 !important; }
-  .bg-emerald-50 { background-color: #ecfdf5 !important; }
-  .border-emerald-500 { border-color: #10b981 !important; }
-
-  .text-amber-600 { color: #d97706 !important; }
-  .bg-amber-50 { background-color: #fffbeb !important; }
-  .border-amber-500 { border-color: #f59e0b !important; }
-
-  .text-sky-600 { color: #0284c7 !important; }
-  .bg-sky-50 { background-color: #f0f9ff !important; }
-  .border-sky-500 { border-color: #0ea5e9 !important; }
-
-  .text-red-500 { color: #ef4444 !important; }
-  .bg-red-50 { background-color: #fef2f2 !important; }
-
-   .btn-primary {
-     @apply px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 active:scale-95 font-bold flex items-center gap-2;
-   }
- 
-   .btn-secondary {
-     @apply px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95 font-bold flex items-center gap-2;
-   }
- 
-   .input-field {
-     @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-300;
-   }
- 
-   .glass-card {
-     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
-   }
- }
-
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 10mm;
-  }
-  
-  body {
-    background: white !important;
-  }
-
-  /* Reset all visibility for print */
-  body * {
-    visibility: hidden;
-  }
-  
-  /* Show only the receipt container and its specific layouts */
-  .receipt-container, .receipt-container *, 
-  .invoice-layout-root, .invoice-layout-root *,
-  .receipt-preview-root, .receipt-preview-root * {
-    visibility: visible !important;
-  }
-  
-  .receipt-container, .invoice-layout-root, .receipt-preview-root {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-    transform: none !important;
-  }
-
-  /* Hide UI elements */
-  nav, .no-print, button, form, [class*="lg:col-span-7"] { 
-    display: none !important; 
+    .receipt-preview-root {
+      position: static !important;
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 2rem !important;
+      box-shadow: none !important;
+      border: none !important;
+      visibility: visible !important;
+    }
   }
 }

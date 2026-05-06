@@ -1,17 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReceiptForm from './components/ReceiptForm';
 import ReceiptPreview from './components/ReceiptPreview';
 import ReceiptList from './components/ReceiptList';
 import type { ReceiptData, AppSettings, DocumentType } from './model';
 import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings } from './utils/storage';
 import { 
-  Download, Printer, Plus, LayoutDashboard, Receipt as ReceiptIcon, 
-  Settings, BarChart3, History, Building2, Mail, Image as ImageIcon 
+  Printer, Plus, Receipt as ReceiptIcon, 
+  Image as ImageIcon, Building2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
 import { imageUrlToBase64 } from './utils/image';
 import { INDUSTRY_DEFAULTS, DEFAULT_CUSTOMER_PERSONA } from './utils/personaDefaults';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 const App: React.FC = () => {
   const [receipts, setReceipts] = useState<ReceiptData[]>(() => getAllReceipts());
@@ -27,19 +33,11 @@ const App: React.FC = () => {
   }, []);
 
   const emptyReceipt = (type: DocumentType = 'receipt'): ReceiptData => {
-    const id = typeof crypto.randomUUID === 'function' 
-      ? crypto.randomUUID() 
-      : Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-      
     const today = new Date();
-    const dueDate = new Date();
-    dueDate.setDate(today.getDate() + 14);
+    const idShort = Math.random().toString(36).substring(2, 9);
     
-    const expiryDate = new Date();
-    expiryDate.setDate(today.getDate() + 30);
-      
     return {
-      id,
+      id: idShort,
       documentType: type,
       theme: 'retail',
       company: settings.companyProfile,
@@ -48,93 +46,45 @@ const App: React.FC = () => {
       customerAddress: '',
       customerEmail: '',
       date: today.toISOString().split('T')[0],
-      time: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      dueDate: type === 'invoice' ? dueDate.toISOString().split('T')[0] : undefined,
-      expiryDate: type === 'invoice' ? expiryDate.toISOString().split('T')[0] : undefined,
-      items: [{ id: Math.random().toString(36).substring(2, 9), description: '', quantity: 1, price: 0, code: '' }],
-      utilityData: {
-        meterNumber: '',
-        previousReading: 0,
-        currentReading: 0,
-        billingPeriod: '',
-        consumptionUnit: 'kWh'
-      },
-      medicalData: {
-        patientId: '',
-        doctorName: '',
-        prescriptionNumber: '',
-        wardNumber: ''
-      },
+      time: today.toTimeString().split(' ')[0].substring(0, 5),
+      items: [{ id: '1', description: '', quantity: 1, price: 0, code: '' }],
+      subtotal: 0,
       taxRate: settings.defaultTaxRate,
       taxAmount: 0,
       discount: 0,
-      subtotal: 0,
       total: 0,
-      paidAmount: 0,
-      paidDate: today.toISOString().split('T')[0],
+      status: 'pending',
       currency: settings.defaultCurrency,
-      status: 'paid',
       paymentMethod: 'cash',
-      showWatermark: false,
       showIndustryBackground: true,
-      footerText: settings.defaultFooterText
+      showWatermark: true,
+      notes: settings.defaultFooterText,
+      footerText: '',
+      medicalData: { doctorName: '', patientId: '', wardNumber: '' },
+      utilityData: { meterNumber: '', previousReading: 0, currentReading: 0 }
     };
   };
 
-  const handleSave = async () => {
-    if (activeReceipt) {
-      saveReceipt(activeReceipt);
-      setReceipts(getAllReceipts());
-      
-      try {
-        const idShort = activeReceipt.id.slice(0, 8).toUpperCase();
-        const folder = `invoices/${idShort}`;
+  const createNew = (type: DocumentType) => {
+    const data = emptyReceipt(type);
+    
+    // Apply industry defaults if any
+    const theme = data.theme;
+    if (theme && INDUSTRY_DEFAULTS[theme]) {
+      const defaults = INDUSTRY_DEFAULTS[theme];
+      data.company = {
+        ...data.company,
+        name: defaults.companyName || data.company.name,
+        address: defaults.address || data.company.address,
+        phone: defaults.phone || data.company.phone,
+        email: defaults.email || data.company.email,
+        website: defaults.website || data.company.website
+      };
+      data.notes = defaults.notes || data.notes;
+      data.footerText = defaults.footerText || data.footerText;
 
-        // 1. Save JSON data backup
-        const jsonContent = JSON.stringify(activeReceipt, null, 2);
-        const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
-        const jsonFilename = `${activeReceipt.documentType.toUpperCase()}_${idShort}.json`;
-        await saveToServer(jsonFilename, jsonBlob, folder);
-
-      } catch (error) {
-        console.error('Failed to save data to server:', error);
-      }
-
-      setIsEditing(false);
-      setView('dashboard');
-      localStorage.removeItem('twt_invoice_draft');
-      alert(`${activeReceipt.documentType === 'invoice' ? 'Invoice' : 'Receipt'} Finalized and Saved to Local Folder!`);
-    }
-  };
-
-  const handleDataChange = (data: ReceiptData) => {
-    // Automatically set industry logo if it's the default one or empty
-    const industryLogos: Record<string, string> = {
-      hospital: '/defaults/hospital-logo.png',
-      pharmacy: '/defaults/pharmacy-logo.png',
-      electricity: '/defaults/electricity-logo.png',
-      water: '/defaults/water-logo.png',
-      retail: '/defaults/retail-logo.png'
-    };
-
-    if (!data.company.logoUrl || data.company.logoUrl.includes('/defaults/')) {
-      const newLogo = industryLogos[data.theme] || '/defaults/default-logo.png';
-      data.company.logoUrl = newLogo;
-    }
-
-    // Apply Industry Specific Persona Defaults if it's a new selection
-    if (activeReceipt && activeReceipt.theme !== data.theme) {
-      const industryDefaults = INDUSTRY_DEFAULTS[data.theme];
-      if (industryDefaults) {
-        data.company.name = industryDefaults.companyName;
-        data.company.address = industryDefaults.address;
-        data.company.phone = industryDefaults.phone;
-        data.company.email = industryDefaults.email;
-        data.company.website = industryDefaults.website;
-        data.notes = industryDefaults.notes;
-        data.footerText = industryDefaults.footerText;
-        
-        // Set Default Customer Persona
+      // Set Default Customer Persona
+      if (DEFAULT_CUSTOMER_PERSONA) {
         data.customerName = DEFAULT_CUSTOMER_PERSONA.name;
         data.customerAddress = DEFAULT_CUSTOMER_PERSONA.address;
         data.customerPhone = DEFAULT_CUSTOMER_PERSONA.phone;
@@ -143,107 +93,59 @@ const App: React.FC = () => {
     }
 
     setActiveReceipt(data);
+    setIsEditing(true);
+    setView('editor');
   };
 
-  const handleDelete = (id: string) => {
-    deleteReceipt(id);
-    setReceipts(getAllReceipts());
-    if (activeReceipt?.id === id) {
-      setActiveReceipt(null);
-      localStorage.removeItem('twt_invoice_draft');
+  const handleSave = async () => {
+    if (activeReceipt) {
+      if (!activeReceipt.company.name) {
+        alert('Please enter your business name.');
+        return;
+      }
+      if (!activeReceipt.customerName) {
+        alert('Please enter the recipient name.');
+        return;
+      }
+      if (activeReceipt.items.some(item => !item.description)) {
+        alert('All items must have a description.');
+        return;
+      }
+
+      // Local storage persistence
+      saveReceipt(activeReceipt);
+      setReceipts(getAllReceipts());
+      
+      alert(`${activeReceipt.documentType === 'invoice' ? 'Invoice' : 'Receipt'} Saved!`);
     }
   };
 
-  const handleEdit = (receipt: ReceiptData) => {
-    setActiveReceipt(receipt);
-    setIsEditing(true);
-    setView('editor');
+  const handleDataChange = (data: ReceiptData) => {
+    setActiveReceipt(data);
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this archive?')) {
+      deleteReceipt(id);
+      setReceipts(getAllReceipts());
+      if (activeReceipt?.id === id) {
+        setActiveReceipt(null);
+        setView('dashboard');
+      }
+    }
   };
 
   const handleView = (receipt: ReceiptData) => {
     setActiveReceipt(receipt);
     setIsEditing(false);
-    setView('dashboard');
-  };
-
-  const createNew = (type: DocumentType = 'receipt') => {
-    localStorage.removeItem('twt_invoice_draft');
-    setActiveReceipt(emptyReceipt(type));
-    setIsEditing(true);
     setView('editor');
-  };
-
-  const saveToServer = async (filename: string, blob: Blob, folder: string) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', blob, filename);
-      formData.append('folder', folder);
-      formData.append('filename', filename);
-
-      // Try multiple possible paths for XAMPP/Vite compatibility
-      const paths = [
-        './save_document.php', 
-        '/save_document.php', 
-        '../save_document.php',
-        'http://localhost/save_document.php',
-        'http://localhost:80/save_document.php'
-      ];
-      let lastError = null;
-
-      for (const path of paths) {
-        try {
-          const response = await fetch(path, {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log(`Successfully saved via ${path}:`, result);
-            return result;
-          }
-        } catch (e) {
-          lastError = e;
-          continue;
-        }
-      }
-      
-      console.error('All save paths failed. Last error:', lastError);
-      return null;
-    } catch (error) {
-      console.error('Error in saveToServer:', error);
-      return null;
-    }
   };
 
   const handleDownloadPDF = useReactToPrint({
     contentRef: receiptRef,
     documentTitle: activeReceipt ? `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}` : 'document',
-    onAfterPrint: async () => {
-      if (!activeReceipt) return;
-      // After browser print dialog, still attempt to save a copy to server for backup
-      try {
-        const element = receiptRef.current;
-        if (!element) return;
-        
-        // Wait for fonts and styles
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const canvas = await html2canvas(element, { 
-          scale: 2, 
-          useCORS: true, 
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          ignoreElements: (el) => el.classList.contains('no-print')
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const filename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${activeReceipt.id.slice(0, 8).toUpperCase()}.png`;
-        const response = await fetch(imgData);
-        const blob = await response.blob();
-        await saveToServer(filename, blob, `invoices/${activeReceipt.id.slice(0, 8).toUpperCase()}`);
-      } catch (err) {
-        console.warn('Silent server backup failed, but browser download should be complete.', err);
-      }
+    onAfterPrint: () => {
+      console.log('Document printed successfully');
     }
   });
 
@@ -251,351 +153,237 @@ const App: React.FC = () => {
     if (!receiptRef.current || !activeReceipt) return;
     
     try {
-      // Ensure logo is base64 for html2canvas
       if (activeReceipt.company.logoUrl && !activeReceipt.company.logoUrl.startsWith('data:')) {
         const base64Logo = await imageUrlToBase64(activeReceipt.company.logoUrl);
         handleDataChange({
           ...activeReceipt,
           company: { ...activeReceipt.company, logoUrl: base64Logo }
         });
-        // Give time for state update and re-render
         await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      const element = receiptRef.current;
-      
-      // Ensure images are fully loaded
-      const images = Array.from(element.getElementsByTagName('img'));
-      await Promise.all(images.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-        });
-      }));
-
-      const canvas = await html2canvas(element, {
-        scale: 3, // High quality
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        imageTimeout: 15000,
-        removeContainer: true,
         ignoreElements: (el) => el.classList.contains('no-print')
       });
       
       const imgData = canvas.toDataURL('image/png', 1.0);
-      const idShort = activeReceipt.id.slice(0, 8).toUpperCase();
-      const filename = `TWT-${activeReceipt.documentType === 'invoice' ? 'INV' : 'REC'}-${idShort}.png`;
-      
-      // Download locally
       const link = document.createElement('a');
-      link.download = filename;
+      link.download = `TWT-${activeReceipt.id.slice(0, 8).toUpperCase()}.png`;
       link.href = imgData;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Also save to server for backup
-      const response = await fetch(imgData);
-      const blob = await response.blob();
-      await saveToServer(filename, blob, `invoices/${idShort}`);
-      
-      alert('Image Exported Successfully!');
     } catch (error) {
       console.error('Image Generation Error:', error);
-      alert('Failed to generate image. Please try the "Download PDF" option instead.');
+      alert('Failed to generate image. Please use PDF export instead.');
     }
   };
 
-  // Stats calculation
-  const totalRevenue = receipts.reduce((sum, r) => sum + (r.status === 'paid' ? r.total : 0), 0);
-  const pendingCount = receipts.filter(r => r.status === 'pending').length;
+  const totalRevenue = receipts.reduce((acc, r) => acc + (r.status === 'paid' ? r.total : 0), 0);
   const totalReceipts = receipts.length;
+  const pendingCount = receipts.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col font-modern">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 md:px-6 py-4">
+    <div className="min-h-screen bg-white flex flex-col font-modern text-slate-900">
+      {/* PWA Minimal Navigation */}
+      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 py-5 border-b border-slate-100 no-print">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-100">
-              <ReceiptIcon size={20} className="md:w-6 md:h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-black tracking-tighter text-slate-900 leading-none">TWT</h1>
-              <p className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enterprise Solutions</p>
-            </div>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('dashboard')}>
+            <ReceiptIcon size={22} strokeWidth={1.5} className="text-slate-900" />
+            <span className="text-lg font-black tracking-tighter uppercase">TWT</span>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-6">
             <button 
               onClick={() => setView('dashboard')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${view === 'dashboard' ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}
+              className={cn(
+                "text-xs font-black uppercase tracking-widest transition-all",
+                view === 'dashboard' ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
+              )}
             >
-              <LayoutDashboard size={18} className="shrink-0" /> <span className="hidden sm:inline">Dashboard</span>
+              Overview
             </button>
-            <div className="flex items-center gap-1 md:gap-2 ml-1 md:ml-2">
+            <div className="h-4 w-[1px] bg-slate-100"></div>
+            <div className="flex items-center gap-4">
               <button 
                 onClick={() => createNew('invoice')}
-                className="flex items-center gap-2 bg-slate-800 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl hover:bg-slate-900 transition-all shadow-md shadow-slate-100 active:scale-95 text-xs md:text-sm font-bold whitespace-nowrap"
+                className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
               >
-                <Plus size={16} className="shrink-0" /> <span className="hidden xs:inline">Invoice</span>
+                + Invoice
               </button>
               <button 
                 onClick={() => createNew('receipt')}
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 active:scale-95 text-xs md:text-sm font-bold whitespace-nowrap"
+                className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
               >
-                <Plus size={16} className="shrink-0" /> <span className="hidden xs:inline">Receipt</span>
+                + Receipt
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-6 md:py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-8 py-8 md:py-12">
         {view === 'dashboard' ? (
-          <div className="space-y-6 md:space-y-8">
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <button 
-                onClick={() => createNew('invoice')}
-                className="group relative bg-slate-800 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-700 shadow-xl overflow-hidden transition-all hover:scale-[1.01] active:scale-[0.99]"
-              >
-                <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:scale-110 transition-transform">
-                  <Plus size={80} className="md:w-[120px] md:h-[120px]" />
-                </div>
-                <div className="relative z-10 flex flex-col items-start gap-3 md:gap-4">
-                  <div className="p-3 md:p-4 bg-white/10 rounded-2xl text-white">
-                    <Plus size={24} className="md:w-8 md:h-8" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter uppercase">Generate Invoice</h3>
-                    <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Create professional billing documents</p>
-                  </div>
-                </div>
-              </button>
+          <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Minimal Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Revenue</p>
+                <p className="text-2xl font-black">{settings.defaultCurrency}{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Transactions</p>
+                <p className="text-2xl font-black">{totalReceipts}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Pending Audit</p>
+                <p className="text-2xl font-black">{pendingCount}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">System Status</p>
+                <p className="text-2xl font-black flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-sm">Active</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Step-by-Step Section */}
+            <section className="space-y-8">
+              <div className="max-w-2xl">
+                <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">What would you like to create today?</h2>
+                <p className="text-slate-500 font-medium leading-relaxed">Select a document type to begin our simplified, step-by-step generation process.</p>
+              </div>
               
-              <button 
-                onClick={() => createNew('receipt')}
-                className="group relative bg-blue-600 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-blue-500 shadow-xl overflow-hidden transition-all hover:scale-[1.01] active:scale-[0.99]"
-              >
-                <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:scale-110 transition-transform">
-                  <Plus size={80} className="md:w-[120px] md:h-[120px]" />
-                </div>
-                <div className="relative z-10 flex flex-col items-start gap-3 md:gap-4">
-                  <div className="p-3 md:p-4 bg-white/10 rounded-2xl text-white">
-                    <Plus size={24} className="md:w-8 md:h-8" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter uppercase">Generate Receipt</h3>
-                    <p className="text-blue-100/60 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Issue proof of payment instantly</p>
-                  </div>
-                </div>
-              </button>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button 
+                  onClick={() => createNew('invoice')}
+                  className="group flex flex-col items-start p-8 rounded-3xl border border-slate-100 hover:border-slate-900 transition-all duration-500 bg-slate-50/30"
+                >
+                  <Plus size={24} strokeWidth={1} className="mb-6 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                  <h3 className="text-xl font-black uppercase tracking-tight mb-2">New Invoice</h3>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Professional Billing</p>
+                </button>
+                
+                <button 
+                  onClick={() => createNew('receipt')}
+                  className="group flex flex-col items-start p-8 rounded-3xl border border-slate-100 hover:border-slate-900 transition-all duration-500 bg-slate-50/30"
+                >
+                  <Plus size={24} strokeWidth={1} className="mb-6 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                  <h3 className="text-xl font-black uppercase tracking-tight mb-2">New Receipt</h3>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Payment Confirmation</p>
+                </button>
+              </div>
+            </section>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-              <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 md:gap-5">
-                <div className="p-3 md:p-4 bg-green-50 text-green-600 rounded-2xl shrink-0">
-                  <BarChart3 size={24} className="md:w-8 md:h-8" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Total Revenue</p>
-                  <p className="text-xl md:text-2xl font-black text-slate-900 truncate">{settings.defaultCurrency}{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                </div>
+            {/* Refined History List */}
+            <section className="pt-8 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Recent Activity</h3>
+                <button className="text-[10px] font-black uppercase tracking-widest text-slate-900 hover:underline">View All Archive</button>
               </div>
-              <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 md:gap-5">
-                <div className="p-3 md:p-4 bg-orange-50 text-orange-600 rounded-2xl shrink-0">
-                  <History size={24} className="md:w-8 md:h-8" />
-                </div>
-                <div>
-                  <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Transactions</p>
-                  <p className="text-xl md:text-2xl font-black text-slate-900">{totalReceipts}</p>
-                </div>
-              </div>
-              <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 md:gap-5 sm:col-span-2 md:col-span-1">
-                <div className="p-3 md:p-4 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                  <Settings size={24} className="md:w-8 md:h-8" />
-                </div>
-                <div>
-                  <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Audit</p>
-                  <p className="text-xl md:text-2xl font-black text-slate-900">{pendingCount}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8">
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 className="font-black text-slate-800 uppercase tracking-tighter text-sm md:text-base">Recent Transactions</h3>
-                    <button className="text-xs font-bold text-blue-600 hover:underline">Export CSV</button>
-                  </div>
-                  <div className="p-2 md:p-4 overflow-x-auto">
-                    <ReceiptList 
+              <div className="bg-white rounded-3xl border border-slate-50 overflow-hidden shadow-sm">
+                <ReceiptList 
                   receipts={receipts} 
                   onDelete={handleDelete} 
                   onView={handleView}
                   activeId={activeReceipt?.id}
                 />
-                  </div>
-                </div>
               </div>
-              <div className="lg:col-span-4">
-                {activeReceipt ? (
-                  <div className="lg:sticky lg:top-28 space-y-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <h3 className="font-black text-slate-800 uppercase tracking-tighter">Quick Preview</h3>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={handleDownloadPDF}
-                          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 shadow-sm transition-all active:scale-95"
-                        >
-                          <Download size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleEdit(activeReceipt)}
-                          className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 shadow-sm transition-all active:scale-95"
-                        >
-                          <Settings size={18} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-center bg-slate-100/50 p-4 md:p-8 rounded-3xl border-2 border-dashed border-slate-200 min-h-[600px] overflow-hidden">
-                      <div className="scale-[0.5] xs:scale-[0.6] sm:scale-[0.7] md:scale-[0.8] lg:scale-[0.55] xl:scale-[0.7] 2xl:scale-[0.85] origin-top transform-gpu transition-all duration-500 shadow-2xl">
-                        <ReceiptPreview ref={receiptRef} data={activeReceipt} />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-slate-900 text-white rounded-2xl p-8 relative overflow-hidden h-full min-h-[300px] md:min-h-[400px]">
-                    <div className="relative z-10">
-                      <h3 className="text-xl font-black mb-2 tracking-tighter">TWT Enterprise</h3>
-                      <p className="text-slate-400 text-sm mb-6 leading-relaxed">Your professional suite for financial document management and auditing.</p>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                          <Building2 size={16} /> {settings.companyProfile.name}
-                        </div>
-                        <div className="flex items-center gap-3 text-sm font-medium text-slate-300">
-                          <Mail size={16} /> {settings.companyProfile.email}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="absolute -right-10 -bottom-10 opacity-10">
-                      <ReceiptIcon size={200} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            </section>
           </div>
         ) : activeReceipt ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7">
-              <ReceiptForm 
-                data={activeReceipt}
-                onSave={handleSave}
-                onChange={handleDataChange}
-                onUploadLogo={(filename, blob) => saveToServer(filename, blob, 'logos')}
-              />
-            </div>
-            
-            <div className="lg:col-span-5 lg:sticky lg:top-28">
-              <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <h3 className="font-black text-slate-800 uppercase tracking-tighter text-sm">Live Preview</h3>
+          <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+              <div className="lg:col-span-6 space-y-8 no-print">
+                <div className="flex items-center justify-between">
+                  <button 
+                    onClick={() => setView('dashboard')}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
+                  >
+                    ← Back to Archive
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 bg-slate-100 rounded-full text-slate-500">
+                    Drafting {activeReceipt.documentType}
+                  </span>
                 </div>
-                <div className="flex gap-1.5 md:gap-2">
-                  <button 
-                    onClick={handleDownloadPDF}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95 font-bold"
-                    title="Professional Print (High-Fidelity)"
-                  >
-                    <Printer size={18} className="md:w-5 md:h-5" />
-                    <span>Download PDF</span>
-                  </button>
-                  <button 
-                    onClick={handleDownloadImage}
-                    className="p-2 md:p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all active:scale-95"
-                    title="Export Image"
-                  >
-                    <ImageIcon size={18} className="md:w-5 md:h-5" />
-                  </button>
+                
+                <div className="bg-white rounded-[2.5rem] border border-slate-100 p-2 shadow-sm">
+                  <ReceiptForm 
+                    data={activeReceipt}
+                    onSave={handleSave}
+                    onChange={handleDataChange}
+                  />
                 </div>
               </div>
               
-              <div className="bg-slate-100/50 p-6 md:p-10 rounded-3xl border-2 border-dashed border-slate-200 min-h-[800px] overflow-hidden flex items-start justify-center">
-                <div className="scale-[0.55] xs:scale-[0.65] sm:scale-[0.8] lg:scale-[0.65] xl:scale-[0.8] 2xl:scale-[0.95] origin-top transform-gpu transition-all duration-500 shadow-2xl">
-                  <ReceiptPreview ref={receiptRef} data={activeReceipt} />
+              <div className="lg:col-span-6 lg:sticky lg:top-32 space-y-8">
+                <div className="flex items-center justify-between bg-white px-8 py-5 rounded-3xl border border-slate-100 shadow-sm no-print">
+                  <div className="flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-[10px]">High Fidelity Preview</h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={handleDownloadPDF}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-black transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest"
+                    >
+                      <Printer size={14} strokeWidth={2} />
+                      Download PDF
+                    </button>
+                    <button 
+                      onClick={handleDownloadImage}
+                      className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 hover:border-slate-900 transition-all active:scale-95"
+                    >
+                      <ImageIcon size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-100 p-8 md:p-12 min-h-[800px] flex items-start justify-center overflow-hidden">
+                  <div className="scale-[0.5] sm:scale-[0.65] lg:scale-[0.6] xl:scale-[0.75] 2xl:scale-[0.9] origin-top transform-gpu transition-all duration-700 shadow-2xl">
+                    <ReceiptPreview ref={receiptRef} data={activeReceipt} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
-            <div className="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-              <div className="w-8 h-8 border-2 border-slate-300 rounded-full flex items-center justify-center">
-                <span className="text-slate-300 text-xl font-bold">!</span>
-              </div>
+          <div className="max-w-xl mx-auto py-24 text-center space-y-8 animate-in zoom-in-95 duration-500 no-print">
+            <div className="w-20 h-20 border border-slate-100 rounded-full flex items-center justify-center mx-auto">
+              <Plus size={32} strokeWidth={0.5} className="text-slate-300" />
             </div>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No document selected</p>
-            <button onClick={() => setView('dashboard')} className="mt-6 btn-primary mx-auto">
-              <LayoutDashboard size={18} /> Back to Dashboard
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black tracking-tight uppercase">Ready to start?</h3>
+              <p className="text-slate-400 font-medium">Select an archive item or create a new document from the navigation.</p>
+            </div>
+            <button 
+              onClick={() => setView('dashboard')} 
+              className="text-xs font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-900 pb-1 hover:text-slate-500 hover:border-slate-300 transition-all"
+            >
+              Go to Overview
             </button>
           </div>
         )}
       </main>
 
-      {/* Print Overlay Styles */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0;
-          }
-          /* Hide everything first */
-          body * {
-            visibility: hidden !important;
-          }
-          /* Show the receipt container and its children */
-          .receipt-container, .receipt-container * {
-            visibility: visible !important;
-          }
-          /* Position the receipt container at the top left of the page */
-          .receipt-container {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            min-height: 297mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            transform: none !important; /* Reset any scaling transforms */
-          }
-          /* Hide UI elements */
-          nav, .no-print, button, form, .lg\\:col-span-7 { 
-            display: none !important; 
-          }
-          
-          /* Force colors to print */
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-        }
-      `}</style>
+      {/* Profile Sidebar (Placeholder for Notion feel) */}
+      <div className="fixed bottom-8 right-8 no-print">
+        <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-2xl flex items-center gap-4 border border-white/10 animate-in slide-in-from-right-8 duration-1000">
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+            <Building2 size={18} strokeWidth={1.5} />
+          </div>
+          <div className="pr-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Enterprise Profile</p>
+            <p className="text-xs font-black uppercase tracking-tight truncate max-w-[150px]">{settings.companyProfile.name || 'Set Up Business'}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
