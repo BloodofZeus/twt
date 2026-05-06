@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReceiptForm from './components/ReceiptForm';
 import ReceiptPreview from './components/ReceiptPreview';
 import ReceiptList from './components/ReceiptList';
+import Gatekeeper from './components/Gatekeeper';
 import type { ReceiptData, AppSettings, DocumentType, CompanyDetails } from './model';
-import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings, saveAppSettings } from './utils/storage';
+import { saveReceipt, getAllReceipts, deleteReceipt, getAppSettings, saveAppSettings, checkAuth, logout } from './utils/storage';
 import { 
   Printer, Plus, Receipt as ReceiptIcon, 
-  Image as ImageIcon, Share2
+  Image as ImageIcon, Share2, LogOut
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
@@ -26,12 +27,29 @@ const App: React.FC = () => {
   const [, setIsEditing] = useState(false);
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
   const [isMobile, setIsMobile] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => checkAuth());
   const receiptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     localStorage.removeItem('twt_invoice_draft');
+    
+    // Check auth periodically or on focus
+    const interval = setInterval(() => {
+      if (!checkAuth()) setIsAuthenticated(false);
+    }, 1000 * 60); // Check every minute
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <Gatekeeper onUnlock={() => setIsAuthenticated(true)} />;
+  }
 
   const emptyReceipt = (type: DocumentType = 'receipt'): ReceiptData => {
     const today = new Date();
@@ -296,6 +314,14 @@ const App: React.FC = () => {
                 + Receipt
               </button>
             </div>
+            <div className="h-4 w-[1px] bg-slate-100"></div>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-slate-400 hover:text-red-500 transition-all"
+              title="Logout"
+            >
+              <LogOut size={18} strokeWidth={2} />
+            </button>
           </div>
         </div>
       </nav>

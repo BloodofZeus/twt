@@ -2,6 +2,35 @@ import type { ReceiptData, AppSettings } from '../model';
 
 const STORAGE_KEY = 'twt_receipt_data';
 const SETTINGS_KEY = 'twt_app_settings';
+const AUTH_KEY = 'twt_auth_session';
+
+const VALID_CODES = ['TWT-2026', 'ADMIN-88', 'STAFF-99']; // Example authorized codes
+
+export const checkAuth = (): boolean => {
+  const session = localStorage.getItem(AUTH_KEY);
+  if (!session) return false;
+  try {
+    const { expiry } = JSON.parse(session);
+    return Date.now() < expiry;
+  } catch {
+    return false;
+  }
+};
+
+export const loginWithCode = (code: string): boolean => {
+  if (VALID_CODES.includes(code.toUpperCase())) {
+    const session = {
+      expiry: Date.now() + (1000 * 60 * 60 * 24) // 24 hour session
+    };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+    return true;
+  }
+  return false;
+};
+
+export const logout = () => {
+  localStorage.removeItem(AUTH_KEY);
+};
 
 const DEFAULT_SETTINGS: AppSettings = {
   defaultCurrency: '$',
